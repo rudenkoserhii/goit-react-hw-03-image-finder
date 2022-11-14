@@ -1,59 +1,91 @@
 import { Component } from 'react';
-import { ContactForm } from './ContactForm/ContactForm';
-import { Filter } from './Filter/Filter';
-import { ContactList } from './ContactList/ContactList';
-import { nanoid } from 'nanoid';
-import Notiflix from 'notiflix';
-import { Wrapper, H1, H2} from './Styled/Styled';
+import { Searchbar } from './Searchbar/Searchbar'
+import { ImageGallery } from './ImageGallery/ImageGallery';
+import { Loader } from './Loader/Loader';
+import { Button } from './Button/Button';
+import { Modal } from './Modal/Modal';
+import { Wrap } from './App.styled';
+
+const APIKEY = '30180377-fac51c2acf971fb8cf8c6aeca';
+const URL = `https://pixabay.com/api/?&key=${APIKEY}&image_type=photo&orientation=horizontal&per_page=12`;
+const Status = {
+    IDLE: 'idle',
+    PENDING: 'pending',
+    RESOLVED: 'resolved',
+    REJECTED: 'rejected',}
+
 
 export class App extends Component {
-state = {
-  contacts: [],
-  filter: '',
-};
+  state = {
+    searchPage: null,
+    error: null,
+    status: Status.IDLE,
+    searchValue: '',
+    page: 0,
+    showModal: false,
+    selectedId: 0,
+  };
 
-componentDidMount() {
-this.setState({contacts: JSON.parse(localStorage.getItem('contacts'))})
-}
+  componentDidUpdate(_, prevState) {
+    const prevValue = prevState.searchValue;
+    const nextValue = this.state.searchValue;
+    const prevPage = prevState.page;
+    const currentPage = this.state.page;
 
-componentDidUpdate(_, prevState) {
+    if (prevValue !== nextValue || prevPage !== currentPage) {
+      this.setState({ status: Status.PENDING });
 
-if( this.state.contacts !== prevState.contacts) {
-localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-}
+      fetch(`${URL}&page=${currentPage}&q=${nextValue}`)
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          return Promise.reject(new Error(`No pictures with word ${this.props.searchValue}`));
+        })
+        .then(searchPage => {
+          if (searchPage.total === 0) {
+            return Promise.reject(new Error(`No pictures with word "${this.state.searchValue}"`))
+          }
+          const oldData = JSON.parse(localStorage.getItem('searchPage'));
+          if(oldData) {
+            localStorage.setItem('searchPage', JSON.stringify(oldData.concat(searchPage.hits)));
+            } else {
+            localStorage.setItem('searchPage', JSON.stringify(searchPage.hits));}
+          this.setState({ searchPage: JSON.parse(localStorage.getItem('searchPage')), status: Status.RESOLVED });
+        })
+        .catch(error => {this.setState({ error, status: Status.REJECTED })
+        });
+    };
+  }
 
-}
+  
+  onSubmit = (value, page) => {
+    this.setState({page: page});
+    this.setState({ searchValue: value });
+  }
 
-
-addContact = (contact) => {
-  if (this.state.contacts.some(({ name }) => contact.name === name)) {
-    Notiflix.Notify.warning(`${contact.name}is already in contacts`);
-    return}
-  contact['id'] = nanoid();
-  this.setState(prevState => ({ contacts: [contact, ...prevState.contacts]}));
-};
-
-filtered = (e) => {
-  this.setState({ filter: e.currentTarget.value });
-};
-
-deleteContact = (id) => {
-  this.setState(prevState => ({ contacts: prevState.contacts.filter(contact => contact.id !== id)}))
-};
-
+  toggleModal = (id) => {
+    this.setState({selectedId: id});
+    this.setState(({ showModal }) => ({ showModal: !showModal}));
+  };
 
   render() {
-
-    const normalizedFilter = this.state.filter.toLowerCase();
-    const visibleContacts = this.state.contacts.filter(contact => contact.name.toLowerCase().includes(normalizedFilter))
+    const { searchPage, error, status, showModal, selectedId, page, searchValue} = this.state;
 
     return (
-      <Wrapper>
-        <H1>Phonebook</H1>
-        <ContactForm onSubmit={this.addContact}></ContactForm>
-        <H2>Contacts</H2>
-        <Filter value={this.state.filter} onChange={this.filtered}></Filter>
-        <ContactList contacts={visibleContacts} onDelete={this.deleteContact}></ContactList>
-      </Wrapper>
+      <main className="App">
+        <Searchbar onSubmit={this.onSubmit}/>
+        <Wrap>
+
+          {(status === Status.RESOLVED) && (<>
+<ImageGallery searchPage={searchPage} toggleModal={this.toggleModal}/>
+<Button onSubmit={this.onSubmit} page={page} searchValue={searchValue}/>
+</>)}
+          {(status === Status.PENDING) && <Loader/>}
+          {(status === Status.REJECTED) && <p>{error.message}</p>}
+          {(showModal) && <Modal selectedId={selectedId} searchPage={searchPage} onClose={this.toggleModal}/>}
+        </Wrap>
+      </main>
   )}
 }
+
