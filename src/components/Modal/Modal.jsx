@@ -1,5 +1,6 @@
 import { Component } from "react";
 import { createPortal } from "react-dom";
+import { ModalStyled, Overlay } from './Modal.styled'
 
 const modalRoot = document.querySelector('#modal-root');
 
@@ -25,14 +26,14 @@ export class Modal extends Component {
         }
     }
 
-filtered = this.props.searchPage.hits.filter(({ id }) => id === this.props.selectedId);
+filtered = this.props.searchPage.filter(({ id }) => id === this.props.selectedId);
 
 render() {
 return createPortal(
-<div className="Overlay" onClick={this.onClickBackdrop}>
-  <div className="Modal">
+<Overlay className="Overlay" onClick={this.onClickBackdrop}>
+  <ModalStyled className="Modal">
     <img src={this.filtered[0].largeImageURL} alt={this.filtered[0].tags} />
-  </div>
-</div>, modalRoot,
+  </ModalStyled>
+</Overlay>, modalRoot,
 
 )}}

@@ -1,4 +1,5 @@
 import { ImageGalleryItem } from './ImageGalleryItem';
+import { ImageGalleryStyled } from './ImageGallery.styled'
 import PropTypes from 'prop-types';
 
 export const ImageGallery = ({ searchPage, toggleModal }) => {
@@ -9,9 +10,9 @@ const onClickTransit = (id) => {
 
     return (
 
-<ul className="ImageGallery">
+<ImageGalleryStyled className="ImageGallery">
     { searchPage.map(({ id, webformatURL, tags }) => <ImageGalleryItem onClickTransit={onClickTransit} id={id} key={id} webformatURL={webformatURL} tags={tags}/>)}
-</ul>
+</ImageGalleryStyled>
 )};
 
 

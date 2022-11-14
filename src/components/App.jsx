@@ -4,7 +4,7 @@ import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Loader } from './Loader/Loader';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
-import { Wrap } from './App.styled';
+import { Wrap, ErrorMessage } from './App.styled';
 
 const APIKEY = '30180377-fac51c2acf971fb8cf8c6aeca';
 const URL = `https://pixabay.com/api/?&key=${APIKEY}&image_type=photo&orientation=horizontal&per_page=12`;
@@ -24,6 +24,7 @@ export class App extends Component {
     page: 0,
     showModal: false,
     selectedId: 0,
+    total: 0,
   };
 
   componentDidUpdate(_, prevState) {
@@ -46,6 +47,7 @@ export class App extends Component {
           if (searchPage.total === 0) {
             return Promise.reject(new Error(`No pictures with word "${this.state.searchValue}"`))
           }
+          this.setState({total: Math.ceil(searchPage.total / 12)});
           const oldData = JSON.parse(localStorage.getItem('searchPage'));
           if(oldData) {
             localStorage.setItem('searchPage', JSON.stringify(oldData.concat(searchPage.hits)));
@@ -56,6 +58,10 @@ export class App extends Component {
         .catch(error => {this.setState({ error, status: Status.REJECTED })
         });
     };
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth',
+    });
   }
 
   
@@ -70,7 +76,7 @@ export class App extends Component {
   };
 
   render() {
-    const { searchPage, error, status, showModal, selectedId, page, searchValue} = this.state;
+    const { searchPage, error, status, showModal, selectedId, page, searchValue, total} = this.state;
 
     return (
       <main className="App">
@@ -78,11 +84,12 @@ export class App extends Component {
         <Wrap>
 
           {(status === Status.RESOLVED) && (<>
-<ImageGallery searchPage={searchPage} toggleModal={this.toggleModal}/>
-<Button onSubmit={this.onSubmit} page={page} searchValue={searchValue}/>
-</>)}
+            <ImageGallery searchPage={searchPage} toggleModal={this.toggleModal}/>
+              { (page < total) &&
+              <Button onSubmit={this.onSubmit} page={page} searchValue={searchValue}/>}
+            </>)}
           {(status === Status.PENDING) && <Loader/>}
-          {(status === Status.REJECTED) && <p>{error.message}</p>}
+          {(status === Status.REJECTED) && <ErrorMessage>{error.message}</ErrorMessage>}
           {(showModal) && <Modal selectedId={selectedId} searchPage={searchPage} onClose={this.toggleModal}/>}
         </Wrap>
       </main>

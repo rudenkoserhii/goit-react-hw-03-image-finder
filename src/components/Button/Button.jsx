@@ -1,13 +1,22 @@
+import { ButtonStyled } from './Button.styled'
+import PropTypes from 'prop-types';
+
 
 export const Button = ({ onSubmit, page, searchValue }) => {
 
-const handlerSubmit = () => {
-    page = page + 1;
-    onSubmit(searchValue, page);
-}
+  const handlerSubmit = () => {
+      page = page + 1;
+      onSubmit(searchValue, page);
+  };
 
 return (
-    <button type="submit" className="Button" id="Button" onClick={handlerSubmit}>
+    <ButtonStyled type="submit" className="Button" id="Button" onClick={handlerSubmit}>
       <span className="Button-label">Load more</span>
-    </button>
+    </ButtonStyled>
 )}
+
+Button.propTypes = {
+    searchValue: PropTypes.string.isRequired,
+    page: PropTypes.number.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+}

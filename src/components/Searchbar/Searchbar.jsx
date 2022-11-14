@@ -1,14 +1,11 @@
 import { Component } from 'react';
+import { SearchFormInput, SearchFormButtonLabel, SearchFormButton, SearchForm, SearchbarStyled } from './Searchbar.styled';
+import Notiflix from 'notiflix';
 
 export class Searchbar extends Component {
 state = {
     value: '',
 }
-
-// handlerChange = (e) => {
-//     const { name, value } = e.currentTarget;
-//     this.setState({ [name]: value });
-// }
 
 onChange = e => {
     this.setState({ value: e.currentTarget.value.toLowerCase() });
@@ -19,7 +16,7 @@ handleSubmit = e => {
 
 
     if (this.state.value.trim() === '') {
-        alert('No search word entered!');
+        Notiflix.warning('No search word entered!');
         return;
     }
     localStorage.clear();
@@ -32,12 +29,12 @@ handleSubmit = e => {
 
     render() {
         return (
-<header className="Searchbar" onSubmit={this.handleSubmit}>
-  <form className="SearchForm">
-    <button type="submit" className="SearchForm-button">
-        {<span className="SearchForm-button-label">Search</span>}
-    </button>
-    <input
+<SearchbarStyled className="Searchbar" onSubmit={this.handleSubmit}>
+  <SearchForm className="SearchForm">
+    <SearchFormButton type="submit" className="SearchForm-button">
+        {<SearchFormButtonLabel className="SearchForm-button-label">Search</SearchFormButtonLabel>}
+    </SearchFormButton>
+    <SearchFormInput
         name="searchValue"
         className="SearchForm-input"
         type="text"
@@ -46,12 +43,8 @@ handleSubmit = e => {
         placeholder="Search images and photos"
         onChange={this.onChange}
     />
-  </form>
-</header>
+  </SearchForm>
+</SearchbarStyled>
 )}};
 
 
-// ContactForm.propTypes = {
-//     options: PropTypes.array.isRequired,
-//     onLeaveFeedback: PropTypes.func.isRequired,
-// };

@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { ImageGalleryItemStyled, ImageGalleryItemImage } from './ImageGallery.styled'
 
 export const ImageGalleryItem = ({ webformatURL, tags, id, onClickTransit }) => {
 
@@ -9,9 +10,9 @@ export const ImageGalleryItem = ({ webformatURL, tags, id, onClickTransit }) => 
 
     return  (
 
-<li className="ImageGalleryItem" onClick={onClick} id={id}>
-  <img className="ImageGalleryItem-image" src={webformatURL} alt={tags} />
-</li>
+<ImageGalleryItemStyled className="ImageGalleryItem" onClick={onClick} id={id}>
+  <ImageGalleryItemImage className="ImageGalleryItem-image" src={webformatURL} alt={tags} />
+</ImageGalleryItemStyled>
 
 )};
 
