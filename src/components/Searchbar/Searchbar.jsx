@@ -19,7 +19,6 @@ handleSubmit = e => {
         Notiflix.warning('No search word entered!');
         return;
     }
-    localStorage.clear();
     this.props.onSubmit(this.state.value, 1);
     this.setState({ value: '' });
 

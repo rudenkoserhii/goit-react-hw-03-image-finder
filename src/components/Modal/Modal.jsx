@@ -26,7 +26,7 @@ export class Modal extends Component {
         }
     }
 
-filtered = this.props.searchPage.filter(({ id }) => id === this.props.selectedId);
+filtered = this.props.images.filter(({ id }) => id === this.props.selectedId);
 
 render() {
 return createPortal(

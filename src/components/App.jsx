@@ -5,9 +5,8 @@ import { Loader } from './Loader/Loader';
 import { Button } from './Button/Button';
 import { Modal } from './Modal/Modal';
 import { Wrap, ErrorMessage } from './App.styled';
+import fetchAPI from './API/API';
 
-const APIKEY = '30180377-fac51c2acf971fb8cf8c6aeca';
-const URL = `https://pixabay.com/api/?&key=${APIKEY}&image_type=photo&orientation=horizontal&per_page=12`;
 const Status = {
     IDLE: 'idle',
     PENDING: 'pending',
@@ -17,7 +16,7 @@ const Status = {
 
 export class App extends Component {
   state = {
-    searchPage: null,
+    images: [],
     error: null,
     status: Status.IDLE,
     searchValue: '',
@@ -36,24 +35,16 @@ export class App extends Component {
     if (prevValue !== nextValue || prevPage !== currentPage) {
       this.setState({ status: Status.PENDING });
 
-      fetch(`${URL}&page=${currentPage}&q=${nextValue}`)
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-          return Promise.reject(new Error(`No pictures with word ${this.props.searchValue}`));
-        })
-        .then(searchPage => {
-          if (searchPage.total === 0) {
+      fetchAPI(currentPage, nextValue)
+        .then(responce => {
+          if (responce.total === 0) {
             return Promise.reject(new Error(`No pictures with word "${this.state.searchValue}"`))
           }
-          this.setState({total: Math.ceil(searchPage.total / 12)});
-          const oldData = JSON.parse(localStorage.getItem('searchPage'));
-          if(oldData) {
-            localStorage.setItem('searchPage', JSON.stringify(oldData.concat(searchPage.hits)));
-            } else {
-            localStorage.setItem('searchPage', JSON.stringify(searchPage.hits));}
-          this.setState({ searchPage: JSON.parse(localStorage.getItem('searchPage')), status: Status.RESOLVED });
+
+          return this.setState({ 
+              total: Math.ceil(responce.total / 12),
+              images: ((prevValue !== nextValue) ? ([...responce.hits]) : ([...prevState.images, ...responce.hits])),
+              status: Status.RESOLVED });
         })
         .catch(error => {this.setState({ error, status: Status.REJECTED })
         });
@@ -66,17 +57,15 @@ export class App extends Component {
 
   
   onSubmit = (value, page) => {
-    this.setState({page: page});
-    this.setState({ searchValue: value });
+    this.setState({searchValue: value, page: page });
   }
 
   toggleModal = (id) => {
-    this.setState({selectedId: id});
-    this.setState(({ showModal }) => ({ showModal: !showModal}));
+    this.setState(({ showModal }) => ({ showModal: !showModal, selectedId: id }));
   };
 
   render() {
-    const { searchPage, error, status, showModal, selectedId, page, searchValue, total} = this.state;
+    const { images, error, status, showModal, selectedId, page, searchValue, total} = this.state;
 
     return (
       <main className="App">
@@ -84,13 +73,13 @@ export class App extends Component {
         <Wrap>
 
           {(status === Status.RESOLVED) && (<>
-            <ImageGallery searchPage={searchPage} toggleModal={this.toggleModal}/>
-              { (page < total) &&
+            <ImageGallery images={images} toggleModal={this.toggleModal}/>
+              { (page < total ) &&
               <Button onSubmit={this.onSubmit} page={page} searchValue={searchValue}/>}
             </>)}
           {(status === Status.PENDING) && <Loader/>}
           {(status === Status.REJECTED) && <ErrorMessage>{error.message}</ErrorMessage>}
-          {(showModal) && <Modal selectedId={selectedId} searchPage={searchPage} onClose={this.toggleModal}/>}
+          {(showModal) && <Modal selectedId={selectedId} images={images} onClose={this.toggleModal}/>}
         </Wrap>
       </main>
   )}
